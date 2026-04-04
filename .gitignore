@@ -1,0 +1,15 @@
+.venv/
+venv/
+__pycache__/
+*.log
+.env
+.pytest_cache/
+.vscode/
+*.zip
+*.xlsx
+*.xls
+*.png
+*.jpg
+*.jpeg
+*.gif
+

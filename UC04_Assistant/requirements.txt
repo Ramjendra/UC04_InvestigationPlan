@@ -1,0 +1,12 @@
+azure-search-documents
+msal
+requests
+openai
+python-dotenv
+streamlit
+pandas
+openpyxl
+azure-ai-projects
+azure-identity
+azure-ai-projects
+azure-identity

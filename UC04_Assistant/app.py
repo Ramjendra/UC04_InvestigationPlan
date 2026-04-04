@@ -1,0 +1,220 @@
+import streamlit as st
+import asyncio
+import json
+import os
+import pandas as pd
+from datetime import datetime
+from dotenv import load_dotenv
+from simulated_data import EXISTING_CASES, ATTORNEYS, DATA_SOURCES, KNOWLEDGE_BASE
+from plan_agent import run_plan_agent
+from dataverse_client import DataverseClient
+
+load_dotenv()
+
+# ── Page Config ──────────────────────────────────────────────────────────────
+st.set_page_config(
+    page_title="UCM | BRI-26-11514",
+    page_icon="⚖️",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+dv_client = DataverseClient()
+plan = dv_client.get_investigation_plan("BRI-26-11514")
+
+# ── Global Premium CSS ──────────────────────────────────────────────────────
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap');
+    
+    html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"], [data-testid="stSidebar"] {
+        font-family: 'Segoe UI', 'Inter', sans-serif;
+        background-color: #ffffff !important;
+        color: #323130 !important;
+    }
+
+    /* Sidebar specific overrides */
+    [data-testid="stSidebar"] {
+        border-right: 1px solid #edebe9;
+    }
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p, 
+    [data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {
+        color: #323130 !important;
+    }
+    
+    /* Ensure radio buttons and info boxes look good on white */
+    .stRadio label { color: #323130 !important; }
+    .stAlert { background-color: #f3f2f1 !important; border: 1px solid #edebe9 !important; color: #323130 !important; }
+
+    /* UCM Styling */
+    .ucm-card {
+        background: white;
+        border: 1px solid #e1dfdd;
+        border-radius: 4px;
+        padding: 0;
+        margin-bottom: 24px;
+        box-shadow: 0 1.6px 3.6px 0 rgba(0,0,0,0.132), 0 0.3px 0.9px 0 rgba(0,0,0,0.108);
+    }
+    .ucm-header {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 12px 16px;
+        background: #faf9f8;
+        border-bottom: 1px solid #edebe9;
+        color: #323130;
+    }
+    .ucm-body { padding: 16px; color: #323130; }
+
+    /* Progress Bar Text Visibility */
+    .progress-text {
+        font-size: 11px;
+        margin-top: 6px;
+        color: #323130;
+    }
+
+    /* Floating Assistant Button */
+    .stButton > button#fab_btn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 64px;
+        height: 64px;
+        border-radius: 50% !important;
+        background: linear-gradient(135deg, #0078d4, #005a9e) !important;
+        color: white !important;
+        font-size: 28px !important;
+        box-shadow: 0 8px 16px rgba(0, 120, 212, 0.3) !important;
+        border: none !important;
+        z-index: 99999 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease !important;
+    }
+    .stButton > button#fab_btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 12px 24px rgba(0, 120, 212, 0.4) !important;
+    }
+
+    /* Assistant Panel Style */
+    .assistant-panel {
+        background: white;
+        border-left: 2px solid #edebe9;
+        height: 100vh;
+        padding-left: 20px;
+        box-shadow: -4px 0 16px rgba(0,0,0,0.05);
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ── Session State ──────────────────────────────────────────────────────────────
+if "chat_open" not in st.session_state: st.session_state.chat_open = False
+if "messages" not in st.session_state: st.session_state.messages = []
+if "ai_mode" not in st.session_state: st.session_state.ai_mode = "Simulated Mock"
+
+# ── Sidebar Configuration ──────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown("### Agent Configuration")
+    st.session_state.ai_mode = st.radio(
+        "AI Engine Mode",
+        ["Live Azure Foundry", "Simulated Mock"],
+        index=0 if os.getenv("AZURE_AI_PROJECT_CONNECTION_STRING") and "your-connection-string" not in os.getenv("AZURE_AI_PROJECT_CONNECTION_STRING") else 1
+    )
+    st.info(f"Currently using: {st.session_state.ai_mode}")
+
+# ── Persistent Assistant Toggle ──────────────────────────────────────────────
+# We place the button outside the column logic to ensure it's always accessible
+if not st.session_state.chat_open:
+    if st.button("🤖", key="fab_btn"):
+        st.session_state.chat_open = True
+        st.rerun()
+
+# ── Layout ──────────────────────────────────────────────────────────────────
+if st.session_state.chat_open:
+    main_col, chat_col = st.columns([0.75, 0.25])
+else:
+    main_col = st.container()
+
+with main_col:
+    # Breadcrumbs
+    st.markdown('<div style="font-size:12px; color:#0078d4; margin-bottom:10px">Dynamics 365 > Business and Regulatory Investigations > Cases</div>', unsafe_allow_html=True)
+    
+    # Case Title
+    col_t, col_s = st.columns([3, 1])
+    with col_t:
+        st.markdown('<h2 style="margin:0; font-size:22px; font-weight:700; color:#323130">BRI-26-11514 [Pending - NAVEX]</h2>', unsafe_allow_html=True)
+        st.markdown('<div style="font-size:13px; color:#605e5c">Asian Desktop · Created 2/22/2026</div>', unsafe_allow_html=True)
+    with col_s:
+        st.markdown('<div style="text-align:right"><span style="background:#0078d4; color:white; padding:6px 12px; border-radius:2px; font-weight:700">Active</span></div>', unsafe_allow_html=True)
+
+    # Progress Bar UI
+    st.markdown("""
+    <div style="background:white; padding:24px; border:1px solid #e1dfdd; border-radius:4px; margin:20px 0">
+        <div style="display:flex; justify-content:space-between; position:relative; padding:0 10%">
+            <div style="position:absolute; top:8px; left:10%; right:10%; height:2px; background:#edebe9"></div>
+            <div style="position:absolute; top:8px; left:10%; width:50%; height:2px; background:#0078d4"></div>
+            <div style="z-index:2; text-align:center"><div style="width:16px; height:16px; background:#0078d4; border-radius:50%; margin:auto"></div><div class="progress-text">Intake</div></div>
+            <div style="z-index:2; text-align:center"><div style="width:16px; height:16px; background:#0078d4; border-radius:50%; margin:auto"></div><div class="progress-text">Triage</div></div>
+            <div style="z-index:2; text-align:center"><div style="width:20px; height:20px; background:white; border:4px solid #0078d4; border-radius:50%; margin:-2px auto 0 auto"></div><div class="progress-text" style="font-weight:700">Investigation</div></div>
+            <div style="z-index:2; text-align:center"><div style="width:16px; height:16px; background:#edebe9; border-radius:50%; margin:auto"></div><div class="progress-text">Reporting</div></div>
+            <div style="z-index:2; text-align:center"><div style="width:16px; height:16px; background:#edebe9; border-radius:50%; margin:auto"></div><div class="progress-text">Closed</div></div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Tabs
+    tabs = st.tabs(["Profile", "Parties", "Case Relationship", "Investigation Plan", "Documents", "Task Board", "Timeline"])
+    
+    with tabs[3]: # Investigation Plan
+        st.markdown("<div style='text-align:center; padding:10px 0; font-size:12px; color:#605e5c'>Privileged and Confidential</div>", unsafe_allow_html=True)
+        
+        # Sections
+        st.markdown('<div class="ucm-card"><div class="ucm-header">Attorney Comments</div><div class="ucm-body">', unsafe_allow_html=True)
+        st.text_area("att_comm", value=plan["attorney_comments"], height=100, label_visibility="collapsed")
+        st.markdown('</div></div>', unsafe_allow_html=True)
+        
+        st.markdown('<div class="ucm-card"><div class="ucm-header">Summary of Allegations</div><div class="ucm-body">', unsafe_allow_html=True)
+        st.markdown(f'<div style="background:#f3f2f1; padding:12px; border-radius:2px; font-size:13px; line-height:1.6; color:#323130">{plan["summary_of_allegations"]}</div>', unsafe_allow_html=True)
+        st.markdown('</div></div>', unsafe_allow_html=True)
+        
+        st.markdown('<div class="ucm-card"><div class="ucm-header">Questions to be Answered</div><div class="ucm-body">', unsafe_allow_html=True)
+        st.table(pd.DataFrame(plan["questions_to_be_answered"]))
+        st.markdown('</div></div>', unsafe_allow_html=True)
+        
+        st.markdown('<div class="ucm-card"><div class="ucm-header">Proposed Investigative Steps</div><div class="ucm-body">', unsafe_allow_html=True)
+        st.table(pd.DataFrame(plan["proposed_investigative_steps"]))
+        st.markdown('</div></div>', unsafe_allow_html=True)
+
+# ── Assistant Sidebar (35% Vertical) ───────────────────────────────────────
+if st.session_state.chat_open:
+    with chat_col:
+        st.markdown('<div class="assistant-panel">', unsafe_allow_html=True)
+        st.markdown("""
+            <div style="background:#0078d4; color:white; padding:20px; font-weight:700; border-radius:4px 4px 0 0; display:flex; justify-content:space-between">
+                <span>CELA AI Assistant</span>
+                <span style="font-size:10px; background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px">Connected</span>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        chat_container = st.container(height=700, border=False)
+        for msg in st.session_state.messages:
+            chat_container.chat_message(msg["role"]).write(msg["content"])
+
+        if prompt := st.chat_input("Ask about BRI-26-11514..."):
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            chat_container.chat_message("user").write(prompt)
+            
+            with st.spinner("Processing..."):
+                from assistant_agent import get_assistant_response
+                history = [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages[:-1]]
+                response = asyncio.run(get_assistant_response(prompt, history, st.session_state.ai_mode))
+                st.session_state.messages.append({"role": "assistant", "content": response})
+                chat_container.chat_message("assistant").write(response)
+                st.rerun()
+
+        if st.button("Minimize Assistant", use_container_width=True):
+            st.session_state.chat_open = False
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
