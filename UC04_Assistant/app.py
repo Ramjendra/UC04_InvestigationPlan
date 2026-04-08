@@ -13,7 +13,7 @@ load_dotenv()
 
 # ── Page Config ──────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="UCM | BRI-26-11514",
+    page_title="UCM | BRI Agent",
     page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -26,7 +26,6 @@ plan = dv_client.get_investigation_plan("BRI-26-11514")
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap');
     
     html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"], [data-testid="stSidebar"] {
         font-family: 'Segoe UI', 'Inter', sans-serif;
@@ -34,13 +33,28 @@ st.markdown("""
         color: #323130 !important;
     }
 
-    /* Sidebar specific overrides */
+    /* Sidebar specific overrides — Dark Dynamics 365 */
     [data-testid="stSidebar"] {
-        border-right: 1px solid #edebe9;
+        background: #212121 !important;
+        border-right: none;
     }
     [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p, 
     [data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {
-        color: #323130 !important;
+        color: #ffffff !important;
+        font-size: 12px !important;
+        margin-bottom: 0px;
+        padding: 6px 0;
+        cursor: pointer;
+    }
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p:hover {
+        background: #333333;
+    }
+    [data-testid="stSidebar"] hr {
+        border-color: #444 !important;
+    }
+    [data-testid="stSidebar"] .stRadio label {
+        color: #ffffff !important;
+        font-size: 11px !important;
     }
     
     /* Ensure radio buttons and info boxes look good on white */
@@ -106,6 +120,53 @@ st.markdown("""
         padding-left: 20px;
         box-shadow: -4px 0 16px rgba(0,0,0,0.05);
     }
+
+    /* Suggestion Chips */
+    .suggestion-chip {
+        display: inline-block;
+        background: #f3f2f1;
+        border: 1px solid #e1dfdd;
+        border-radius: 16px;
+        padding: 6px 14px;
+        font-size: 11px;
+        color: #0078d4;
+        cursor: pointer;
+        margin: 3px 4px;
+        transition: all 0.2s ease;
+    }
+    .suggestion-chip:hover {
+        background: #e1dfdd;
+        border-color: #0078d4;
+    }
+
+    /* Pipeline Indicator */
+    .pipeline-bar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: #f0f6ff;
+        border-radius: 4px;
+        font-size: 10px;
+        color: #005a9e;
+        margin: 8px 0;
+    }
+    .pipeline-step {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+    .pipeline-arrow {
+        color: #a19f9d;
+        font-size: 10px;
+    }
+
+    /* Chat message rendering */
+    .bri-response {
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 8px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -113,19 +174,46 @@ st.markdown("""
 if "chat_open" not in st.session_state: st.session_state.chat_open = False
 if "messages" not in st.session_state: st.session_state.messages = []
 if "ai_mode" not in st.session_state: st.session_state.ai_mode = "Simulated Mock"
+if "suggestion_prompt" not in st.session_state: st.session_state.suggestion_prompt = None
 
-# ── Sidebar Configuration ──────────────────────────────────────────────────
+# ── Sidebar — Dynamics 365 Navigation ──────────────────────────────────────
 with st.sidebar:
-    st.markdown("### Agent Configuration")
+    # Dynamics 365 branding
+    st.markdown("""
+    <div style="padding: 10px 15px 5px 15px; font-size: 14px; font-weight: 600; color: #ffffff;">
+        Dynamics 365
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown("---")
+
+    # Navigation items
+    st.markdown("🏠  Home")
+    st.markdown("🕐  Recent")
+    st.markdown("📌  Pinned")
+    
+    st.markdown('<div style="color: #8a8886; font-size: 10px; font-weight: 600; padding: 15px 0 5px 0; text-transform: uppercase;">Case Management</div>', unsafe_allow_html=True)
+    st.markdown("🏛️  Home Dashboard")
+    st.markdown("📂  Cases")
+    st.markdown("🔍  Contact Search")
+    st.markdown("🔒  Revoke Access")
+
+    st.markdown('<div style="color: #8a8886; font-size: 10px; font-weight: 600; padding: 15px 0 5px 0; text-transform: uppercase;">Configurations</div>', unsafe_allow_html=True)
+    st.markdown("📋  Policies")
+
+    st.markdown('<div style="color: #8a8886; font-size: 10px; font-weight: 600; padding: 15px 0 5px 0; text-transform: uppercase;">Other Tools</div>', unsafe_allow_html=True)
+    st.markdown("🔗  PMO Link")
+    st.markdown("🎬  Video Link")
+
+    st.markdown("---")
+    # AI mode toggle (compact, at bottom)
     st.session_state.ai_mode = st.radio(
-        "AI Engine Mode",
-        ["Live Azure Foundry", "Simulated Mock"],
-        index=0 if os.getenv("AZURE_AI_PROJECT_CONNECTION_STRING") and "your-connection-string" not in os.getenv("AZURE_AI_PROJECT_CONNECTION_STRING") else 1
+        "AI Mode",
+        ["Simulated Mock", "Live Azure Foundry"],
+        index=0,
+        label_visibility="collapsed"
     )
-    st.info(f"Currently using: {st.session_state.ai_mode}")
 
 # ── Persistent Assistant Toggle ──────────────────────────────────────────────
-# We place the button outside the column logic to ensure it's always accessible
 if not st.session_state.chat_open:
     if st.button("🤖", key="fab_btn"):
         st.session_state.chat_open = True
@@ -133,7 +221,7 @@ if not st.session_state.chat_open:
 
 # ── Layout ──────────────────────────────────────────────────────────────────
 if st.session_state.chat_open:
-    main_col, chat_col = st.columns([0.75, 0.25])
+    main_col, chat_col = st.columns([0.65, 0.35])
 else:
     main_col = st.container()
 
@@ -168,7 +256,7 @@ with main_col:
     tabs = st.tabs(["Profile", "Parties", "Case Relationship", "Investigation Plan", "Documents", "Task Board", "Timeline"])
     
     with tabs[3]: # Investigation Plan
-        st.markdown("<div style='text-align:center; padding:10px 0; font-size:12px; color:#605e5c'>Privileged and Confidential</div>", unsafe_allow_html=True)
+        st.markdown('<div style="text-align:center; padding:10px 0; font-size:12px; color:#605e5c">Privileged and Confidential</div>', unsafe_allow_html=True)
         
         # Sections
         st.markdown('<div class="ucm-card"><div class="ucm-header">Attorney Comments</div><div class="ucm-body">', unsafe_allow_html=True)
@@ -187,34 +275,117 @@ with main_col:
         st.table(pd.DataFrame(plan["proposed_investigative_steps"]))
         st.markdown('</div></div>', unsafe_allow_html=True)
 
-# ── Assistant Sidebar (35% Vertical) ───────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# ASSISTANT PANEL (BRI Agent — 35% Vertical)
+# ══════════════════════════════════════════════════════════════════════════════
 if st.session_state.chat_open:
     with chat_col:
-        st.markdown('<div class="assistant-panel">', unsafe_allow_html=True)
+        # ── Header ──
         st.markdown("""
-            <div style="background:#0078d4; color:white; padding:20px; font-weight:700; border-radius:4px 4px 0 0; display:flex; justify-content:space-between">
-                <span>CELA AI Assistant</span>
-                <span style="font-size:10px; background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px">Connected</span>
+            <div style="background: linear-gradient(135deg, #0078d4, #005a9e); color:white; padding:16px 20px; border-radius:4px 4px 0 0;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <span style="font-weight:700; font-size: 15px;">BRI Agent</span>
+                        <span style="font-size:10px; background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px; margin-left:8px;">Connected</span>
+                    </div>
+                    <span style="font-size:10px; opacity:0.8;">Azure OpenAI "On Your Data"</span>
+                </div>
+                <div style="margin-top:8px;">
+                    <div class="pipeline-bar" style="background: rgba(255,255,255,0.15); color: white;">
+                        <span class="pipeline-step">🔍 Dataverse</span>
+                        <span class="pipeline-arrow">→</span>
+                        <span class="pipeline-step">🧠 Embeddings</span>
+                        <span class="pipeline-arrow">→</span>
+                        <span class="pipeline-step">📚 AI Search</span>
+                        <span class="pipeline-arrow">→</span>
+                        <span class="pipeline-step">💬 Chatbot</span>
+                    </div>
+                </div>
             </div>
         """, unsafe_allow_html=True)
-        
-        chat_container = st.container(height=700, border=False)
-        for msg in st.session_state.messages:
-            chat_container.chat_message(msg["role"]).write(msg["content"])
 
-        if prompt := st.chat_input("Ask about BRI-26-11514..."):
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            chat_container.chat_message("user").write(prompt)
-            
-            with st.spinner("Processing..."):
-                from assistant_agent import get_assistant_response
-                history = [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages[:-1]]
-                response = asyncio.run(get_assistant_response(prompt, history, st.session_state.ai_mode))
-                st.session_state.messages.append({"role": "assistant", "content": response})
-                chat_container.chat_message("assistant").write(response)
+        # ── Suggestion Chips ──
+        chip_col1, chip_col2, chip_col3 = st.columns(3)
+        with chip_col1:
+            if st.button("📋 Case Status", key="chip_status", use_container_width=True):
+                st.session_state.suggestion_prompt = "What is the latest on case BRI-26-08314"
+                st.rerun()
+        with chip_col2:
+            if st.button("📌 Next Steps", key="chip_next", use_container_width=True):
+                st.session_state.suggestion_prompt = "What are the next steps for case BRI-26-08314"
+                st.rerun()
+        with chip_col3:
+            if st.button("🔗 Similar Cases", key="chip_similar", use_container_width=True):
+                st.session_state.suggestion_prompt = "Find me similar cases to BRI-26-08314"
                 st.rerun()
 
-        if st.button("Minimize Assistant", use_container_width=True):
+        # ── Welcome message when no messages yet ──
+        if not st.session_state.messages:
+            st.markdown("""
+            <div style="font-family: 'Segoe UI', sans-serif; padding: 16px; font-size: 13px; color: #323130; 
+                        line-height: 1.7; background: #f9f9f9; border-radius: 4px; border: 1px solid #edebe9; margin: 8px 0;">
+                👋 <b>Welcome!</b> I'm the <b>BRI Investigation Agent</b> powered by <b>Azure OpenAI "On Your Data"</b>.<br><br>
+                <b>🔍 Try asking me:</b><br>
+                <div style="margin-left: 12px; margin-top: 4px;">
+                    📋 "What is the latest on case BRI-26-08314"<br>
+                    📌 "What are the next steps for case BRI-26-08314"<br>
+                    🔗 "Find me similar cases to BRI-26-08314"<br>
+                    👤 "Who is the attorney assigned to BRI-26-08314"<br>
+                    📊 "Show investigation plan for BRI-26-08314"<br>
+                    🕐 "Show timeline for BRI-26-08314"<br>
+                    📄 "What documents are needed for BRI-26-08314"<br>
+                    ⚖️ "What is the discipline policy"<br>
+                    📖 "What is the GDPR breach protocol"<br>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # ── Display existing messages ──
+        for msg in st.session_state.messages:
+            if msg["role"] == "user":
+                with st.chat_message("user"):
+                    st.write(msg["content"])
+            else:
+                with st.chat_message("assistant"):
+                    content = msg["content"]
+                    if isinstance(content, dict):
+                        st.markdown(content.get("response", ""), unsafe_allow_html=True)
+                    elif "<div" in str(content):
+                        st.markdown(content, unsafe_allow_html=True)
+                    else:
+                        st.write(content)
+
+        # ── Process prompt (from chip or chat input) ──
+        prompt = st.session_state.suggestion_prompt
+        st.session_state.suggestion_prompt = None  # Reset after consuming
+
+        if not prompt:
+            prompt = st.chat_input("Ask about BRI cases... (e.g., BRI-26-08314)", key="bri_chat_input")
+
+        if prompt:
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.write(prompt)
+            
+            with st.spinner("🔍 Searching Dataverse → 🧠 Embeddings → 📚 AI Search → 💬 Response..."):
+                from assistant_agent import get_assistant_response
+                history = [{"role": m["role"], "content": m["content"] if isinstance(m["content"], str) else m["content"].get("response", "")} for m in st.session_state.messages[:-1]]
+                response = asyncio.run(get_assistant_response(prompt, history, st.session_state.ai_mode))
+            
+            # Store and render
+            if isinstance(response, dict):
+                st.session_state.messages.append({"role": "assistant", "content": response})
+                with st.chat_message("assistant"):
+                    st.markdown(response.get("response", ""), unsafe_allow_html=True)
+            else:
+                st.session_state.messages.append({"role": "assistant", "content": str(response)})
+                with st.chat_message("assistant"):
+                    st.write(str(response))
+            
+            st.rerun()
+
+        # ── Minimize Button ──
+        if st.button("✕ Minimize", use_container_width=True, key="minimize_btn"):
             st.session_state.chat_open = False
             st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
+
