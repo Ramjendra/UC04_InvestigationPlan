@@ -310,9 +310,9 @@ if st.session_state.chat_open:
         """, unsafe_allow_html=True)
 
         # ── Suggestion Chips ──
-        chip_col1, chip_col2, chip_col3 = st.columns(3)
+        chip_col1, chip_col2, chip_col3, chip_col4 = st.columns(4)
         with chip_col1:
-            if st.button("📋 Case Status", key="chip_status", use_container_width=True):
+            if st.button("📋 Status", key="chip_status", use_container_width=True):
                 st.session_state.suggestion_prompt = "What is the latest on case BRI-26-08314"
                 st.rerun()
         with chip_col2:
@@ -320,8 +320,12 @@ if st.session_state.chat_open:
                 st.session_state.suggestion_prompt = "What are the next steps for case BRI-26-08314"
                 st.rerun()
         with chip_col3:
-            if st.button("🔗 Similar Cases", key="chip_similar", use_container_width=True):
+            if st.button("🔗 Similar", key="chip_similar", use_container_width=True):
                 st.session_state.suggestion_prompt = "Find me similar cases to BRI-26-08314"
+                st.rerun()
+        with chip_col4:
+            if st.button("📊 Propose Steps", key="chip_propose", use_container_width=True):
+                st.session_state.suggestion_prompt = "Propose investigation steps for case BRI-26-08314"
                 st.rerun()
 
         # ── Welcome message when no messages yet ──
@@ -329,18 +333,12 @@ if st.session_state.chat_open:
             st.markdown("""
             <div style="font-family: 'Segoe UI', sans-serif; padding: 16px; font-size: 13px; color: #323130; 
                         line-height: 1.7; background: #f9f9f9; border-radius: 4px; border: 1px solid #edebe9; margin: 8px 0;">
-                👋 <b>Welcome!</b> I'm the <b>BRI Investigation Agent</b> powered by <b>Azure OpenAI "On Your Data"</b>.<br><br>
+                👋 <b>Welcome!</b> I'm the <b>BRI Investigation Agent</b>.<br><br>
                 <b>🔍 Try asking me:</b><br>
                 <div style="margin-left: 12px; margin-top: 4px;">
+                    📊 "Propose investigation steps for BRI-26-08314"<br>
                     📋 "What is the latest on case BRI-26-08314"<br>
                     📌 "What are the next steps for case BRI-26-08314"<br>
-                    🔗 "Find me similar cases to BRI-26-08314"<br>
-                    👤 "Who is the attorney assigned to BRI-26-08314"<br>
-                    📊 "Show investigation plan for BRI-26-08314"<br>
-                    🕐 "Show timeline for BRI-26-08314"<br>
-                    📄 "What documents are needed for BRI-26-08314"<br>
-                    ⚖️ "What is the discipline policy"<br>
-                    📖 "What is the GDPR breach protocol"<br>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -362,16 +360,31 @@ if st.session_state.chat_open:
                         col_acc, col_rej = st.columns(2)
                         with col_acc:
                             if st.button("✅ Accept", key=f"acc_{i}", use_container_width=True):
-                                # Logic to update Investigation Plan tab
                                 content_preview = response_text[:100].replace('\n', ' ') + "..."
                                 logger.info(f"ACTION: User ACCEPTED message {i}. Content Preview: {content_preview}")
                                 st.session_state.handled_messages.add(msg_id)
                                 
-                                # If the message contains a case summary or plan, update the tab
-                                if "Case Summary" in response_text or "Allegation" in response_text or "Next Steps" in response_text:
-                                    logger.info(f"DATA_TRANSFER: Updating Investigation Plan from message {i}")
-                                    st.session_state.current_plan["summary_of_allegations"] = f"AI Clarification ({datetime.now().strftime('%Y-%m-%d %H:%M')}): " + response_text
-                                    st.success("Changes synced to Investigation Plan!")
+                                # Logic to update Investigation Plan tab
+                                updated = False
+                                if "Proposed Investigative Plan Structure" in response_text:
+                                    logger.info(f"DATA_TRANSFER: Updating Proposed Steps from message {i}")
+                                    # Simulate extracting the table data (since this is mock-focused)
+                                    # In a real app, we'd extract from metadata or structured response
+                                    new_steps = [
+                                        {"Step": "Internal Document Review", "Owner": "Forensics Team", "Due Date": "2025-08-30", "Status": "In Progress"},
+                                        {"Step": "Cummins Stakeholder Interview", "Owner": "Alicia Cullen", "Due Date": "2025-09-02", "Status": "Not Started"},
+                                        {"Step": "Safety Risk Assessment", "Owner": "Engineering Lead", "Due Date": "2025-09-05", "Status": "Not Started"}
+                                    ]
+                                    st.session_state.current_plan["proposed_investigative_steps"] = new_steps
+                                    updated = True
+
+                                if "Case Summary" in response_text or "Allegation" in response_text:
+                                    logger.info(f"DATA_TRANSFER: Updating Allegation Summary from message {i}")
+                                    st.session_state.current_plan["summary_of_allegations"] = f"AI Update ({datetime.now().strftime('%m/%d/%Y')}): " + response_text
+                                    updated = True
+                                
+                                if updated:
+                                    st.success("Plan updated successfully!")
                                 st.rerun()
                         with col_rej:
                             if st.button("❌ Reject", key=f"rej_{i}", use_container_width=True):

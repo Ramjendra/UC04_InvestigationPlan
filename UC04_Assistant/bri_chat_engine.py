@@ -378,7 +378,7 @@ def detect_intent(user_query: str) -> dict:
 
     if any(kw in q for kw in ["similar cases", "find me similar", "related cases", "find similar", "comparable"]):
         return {"intent": "similar_cases", "case_id": case_id}
-    elif any(kw in q for kw in ["next step", "next steps", "what should", "what to do", "recommend", "action items"]):
+    elif any(kw in user_query.lower() for kw in ["next step", "what should i do", "actionable", "plan next", "propose investigation steps"]):
         return {"intent": "next_steps", "case_id": case_id}
     elif any(kw in q for kw in ["attorney", "lawyer", "who is assigned", "assigned to", "counsel"]):
         return {"intent": "attorney_info", "case_id": case_id}
@@ -438,27 +438,52 @@ def _format_case_summary(case: dict) -> str:
 </div>"""
 
 
-def _format_next_steps(case: dict) -> str:
+def _format_next_steps(data: dict) -> str:
     """Format next steps as rich HTML matching Image 1/2."""
-    steps_html = ""
-    for step in case.get("next_steps", ["No specific next steps available for this case."]):
-        case_ref = case["case_id"]
-        step_text = step.replace(
-            f"[{case_ref}]",
-            f'<a href="#" style="color: #0078d4; text-decoration: underline;">[{case_ref}]</a>'
-        )
-        steps_html += f"""<li style="margin-bottom: 8px; line-height: 1.6;">{step_text}</li>"""
+    case_id = data.get("case_id", "Unknown")
+    
+    # Formatted List
+    steps_html = "<ul>"
+    for step in data.get("next_steps", ["Consult with lead attorney for guidance."]):
+        steps_html += f'<li style="margin-bottom: 6px;">{step}</li>'
+    steps_html += "</ul>"
+    
+    # Structured Table if available
+    structured_html = ""
+    if "proposed_investigative_steps" in data:
+        structured_html = """
+        <div style="margin-top: 15px; border: 1px solid #edebe9; border-radius: 4px;">
+            <div style="background: #f3f2f1; padding: 8px; font-weight: 600; font-size: 12px; border-bottom: 1px solid #edebe9;">
+                Proposed Investigative Plan Structure
+            </div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                <tr style="background: #faf9f8; border-bottom: 1px solid #edebe9;">
+                    <th style="text-align: left; padding: 8px;">Step</th>
+                    <th style="text-align: left; padding: 8px;">Owner</th>
+                    <th style="text-align: left; padding: 8px;">Due Date</th>
+                </tr>
+        """
+        for s in data["proposed_investigative_steps"]:
+            structured_html += f"""
+                <tr style="border-bottom: 1px dotted #edebe9;">
+                    <td style="padding: 8px;">{s['Step']}</td>
+                    <td style="padding: 8px;">{s['Owner']}</td>
+                    <td style="padding: 8px;">{s['Due Date']}</td>
+                </tr>
+            """
+        structured_html += "</table></div>"
 
-    return f"""<div style="font-family: 'Segoe UI', sans-serif; padding: 8px 0;">
-<div style="color: #d83b01; font-weight: 600; font-size: 14px; margin-bottom: 8px;">
-    Prompt: What are the next steps for case {case['case_id']}
-</div>
-<div style="font-size: 13px; color: #323130; line-height: 1.6;">
-    <ul style="margin: 4px 0; padding-left: 20px;">
+    response_html = f"""<div style="font-family: 'Segoe UI', sans-serif;">
+        <div style="background: #fff8f0; color: #844800; padding: 12px; border-radius: 4px; border-left: 4px solid #ffaa44; margin-bottom: 15px; font-size: 13px;">
+            <b>📌 Actionable Next Steps</b> for Case <b>{case_id}</b>
+        </div>
         {steps_html}
-    </ul>
-</div>
-</div>"""
+        {structured_html}
+        <div style="font-size: 11px; color: #605e5c; margin-top: 10px;">
+            <i>Click <b>Accept</b> to sync this structured plan to the Investigation Plan tab.</i>
+        </div>
+    </div>"""
+    return response_html
 
 
 def _format_similar_cases(case_id: str) -> str:
