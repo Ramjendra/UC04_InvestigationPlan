@@ -52,7 +52,7 @@ DATA SOURCE: Azure AI Search (Vectorized Index)
 # MAIN FUNCTION — Pure Azure Search Flow
 # ═══════════════════════════════════════════════════════════════════════════════
 
-async def get_assistant_response(user_query: str, chat_history: list, ai_mode: str = "Live Azure Foundry"):
+async def get_assistant_response(user_query: str, chat_history: list, ai_mode: str = "Simulated Mock"):
     """
     Primary orchestrator for the BRI Agent.
     Prioritizes Azure OpenAI + Azure Search ('On Your Data') flow.
