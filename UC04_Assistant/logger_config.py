@@ -17,8 +17,8 @@ def setup_logger(name="bri_assistant"):
         
     log_file = os.path.join(log_dir, "assistant.log")
     
-    # Formatter
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # Formatter (includes filename and line number)
+    formatter = logging.Formatter('%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s')
 
     # File Handler
     file_handler = logging.FileHandler(log_file)
