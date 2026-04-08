@@ -24,6 +24,8 @@ st.set_page_config(
 dv_client = DataverseClient()
 if "current_plan" not in st.session_state:
     st.session_state.current_plan = dv_client.get_investigation_plan("BRI-26-11514")
+    # Make questions empty upon initial load as requested
+    st.session_state.current_plan["questions_to_be_answered"] = []
 plan = st.session_state.current_plan
 
 # ── Global Premium CSS ──────────────────────────────────────────────────────
@@ -366,16 +368,24 @@ if st.session_state.chat_open:
                                 
                                 # Logic to update Investigation Plan tab
                                 updated = False
-                                if "Proposed Investigative Plan Structure" in response_text:
+                                if "Proposed Investigative Plan Structure" in response_text or "Proposed Investigative Plan" in response_text:
                                     logger.info(f"DATA_TRANSFER: Updating Proposed Steps from message {i}")
-                                    # Simulate extracting the table data (since this is mock-focused)
-                                    # In a real app, we'd extract from metadata or structured response
                                     new_steps = [
-                                        {"Step": "Internal Document Review", "Owner": "Forensics Team", "Due Date": "2025-08-30", "Status": "In Progress"},
-                                        {"Step": "Cummins Stakeholder Interview", "Owner": "Alicia Cullen", "Due Date": "2025-09-02", "Status": "Not Started"},
-                                        {"Step": "Safety Risk Assessment", "Owner": "Engineering Lead", "Due Date": "2025-09-05", "Status": "Not Started"}
+                                        {"Step Number": 1, "Investigation Step": "Review AI Co-pilot Access Logs", "Team": "IT security", "Status": "In Progress", "Notes": "Check for IP mismatches."},
+                                        {"Step Number": 2, "Investigation Step": "Identify Investigation Stages", "Team": "Legal", "Status": "Completed", "Notes": "CILA framework applied."},
+                                        {"Step Number": 3, "Investigation Step": "Determine Required Documents", "Team": "Compliance", "Status": "Pending", "Notes": "Standard evidence matrix."}
                                     ]
                                     st.session_state.current_plan["proposed_investigative_steps"] = new_steps
+                                    updated = True
+
+                                if "Key Questions to be Answered" in response_text:
+                                    logger.info(f"DATA_TRANSFER: Updating Questions from message {i}")
+                                    new_qs = [
+                                        {"Question Number": 1, "Question": "What was the exact time of the unexpected logout?"},
+                                        {"Question Number": 2, "Question": "Is 'ye@student.lns.edu' a known alias or internal account?"},
+                                        {"Question Number": 3, "Question": "Are there any logs showing access from unknown IP addresses?"}
+                                    ]
+                                    st.session_state.current_plan["questions_to_be_answered"] = new_qs
                                     updated = True
 
                                 if "Case Summary" in response_text or "Allegation" in response_text:

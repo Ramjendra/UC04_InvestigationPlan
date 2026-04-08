@@ -106,13 +106,16 @@ BRI_CASES_DB = {
             "Mandatory IP awareness training was completed on 20-May-2024.",
             "No further action required. Case archived for precedent reference."
         ],
-        "timeline": [
-            {"date": "15-Mar-2024", "event": "Case received — employee request flagged"},
-            {"date": "22-Mar-2024", "event": "Investigation initiated by David Park"},
-            {"date": "15-Apr-2024", "event": "Interviews completed"},
-            {"date": "30-Apr-2024", "event": "Written warning issued"},
-            {"date": "20-May-2024", "event": "IP training completed — case closed"},
+        "proposed_investigative_steps": [
+            {"Step Number": 1, "Investigation Step": "Review AI Co-pilot Access Logs", "Team": "IT security", "Status": "In Progress", "Notes": "Check for IP mismatches."},
+            {"Step Number": 2, "Investigation Step": "Identify Investigation Stages", "Team": "Legal", "Status": "Completed", "Notes": "CILA framework applied."},
+            {"Step Number": 3, "Investigation Step": "Determine Required Documents", "Team": "Compliance", "Status": "Pending", "Notes": "Standard evidence matrix."}
         ],
+        "questions_to_be_answered": [
+            {"Question Number": 1, "Question": "What was the exact time of the unexpected logout?"},
+            {"Question Number": 2, "Question": "Is 'ye@student.lns.edu' a known alias or internal account?"},
+            {"Question Number": 3, "Question": "Are there any logs showing access from unknown IP addresses?"}
+        ]
     },
     "BRI-26-08049": {
         "case_id": "BRI-26-08049",
@@ -378,8 +381,10 @@ def detect_intent(user_query: str) -> dict:
 
     if any(kw in q for kw in ["similar cases", "find me similar", "related cases", "find similar", "comparable"]):
         return {"intent": "similar_cases", "case_id": case_id}
-    elif any(kw in user_query.lower() for kw in ["next step", "what should i do", "actionable", "plan next", "propose investigation steps"]):
+    elif any(kw in user_query.lower() for kw in ["next step", "what should i do", "actionable", "plan next", "propose investigation steps", "investigative steps"]):
         return {"intent": "next_steps", "case_id": case_id}
+    elif any(kw in user_query.lower() for kw in ["questions", "to be answered", "what to ask", "interview questions"]):
+        return {"intent": "questions_to_ask", "case_id": case_id}
     elif any(kw in q for kw in ["attorney", "lawyer", "who is assigned", "assigned to", "counsel"]):
         return {"intent": "attorney_info", "case_id": case_id}
     elif any(kw in q for kw in ["investigation plan", "plan for", "investigation stages", "plan stages"]):
@@ -439,53 +444,84 @@ def _format_case_summary(case: dict) -> str:
     return response_html
 
 
+def items_to_html(items):
+    html = "<ul>"
+    for item in items:
+        html += f'<li style="margin-bottom: 5px; font-size: 12px;">{item}</li>'
+    return html + "</ul>"
+
+
 def _format_next_steps(data: dict) -> str:
-    """Format next steps as rich HTML matching Image 1/2."""
+    """Format next steps as rich HTML table with Step Number, Team, Status, etc."""
     case_id = data.get("case_id", "Unknown")
     
-    # Formatted List
-    steps_html = "<ul>"
-    for step in data.get("next_steps", ["Consult with lead attorney for guidance."]):
-        steps_html += f'<li style="margin-bottom: 6px;">{step}</li>'
-    steps_html += "</ul>"
-    
-    # Structured Table if available
-    structured_html = ""
+    # Structured Table
+    table_content = ""
     if "proposed_investigative_steps" in data:
-        structured_html = """
+        table_content = """
         <div style="margin-top: 15px; border: 1px solid #edebe9; border-radius: 4px;">
             <div style="background: #f3f2f1; padding: 8px; font-weight: 600; font-size: 12px; border-bottom: 1px solid #edebe9;">
-                Proposed Investigative Plan Structure
+                📑 Proposed Investigative Plan
             </div>
-            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px; color: #323130;">
                 <tr style="background: #faf9f8; border-bottom: 1px solid #edebe9;">
+                    <th style="text-align: left; padding: 8px; width: 40px;">#</th>
                     <th style="text-align: left; padding: 8px;">Step</th>
-                    <th style="text-align: left; padding: 8px;">Owner</th>
-                    <th style="text-align: left; padding: 8px;">Due Date</th>
+                    <th style="text-align: left; padding: 8px;">Team</th>
+                    <th style="text-align: left; padding: 8px;">Status</th>
                 </tr>
         """
         for s in data["proposed_investigative_steps"]:
-            structured_html += f"""
+            table_content += f"""
                 <tr style="border-bottom: 1px dotted #edebe9;">
-                    <td style="padding: 8px;">{s['Step']}</td>
-                    <td style="padding: 8px;">{s['Owner']}</td>
-                    <td style="padding: 8px;">{s['Due Date']}</td>
-<tr style="border-bottom: 1px dotted #edebe9;">
-<td style="padding: 8px;">{s['Step']}</td>
-<td style="padding: 8px;">{s['Owner']}</td>
-<td style="padding: 8px;">{s['Due Date']}</td>
-</tr>
-"""
-        structured_html += "</table></div>"
+                    <td style="padding: 8px; color: #605e5c;">{s.get('Step Number', '')}</td>
+                    <td style="padding: 8px;"><b>{s.get('Investigation Step', '')}</b><br><small style="color: #605e5c;">{s.get('Notes', '')}</small></td>
+                    <td style="padding: 8px;">{s.get('Team', '')}</td>
+                    <td style="padding: 8px;">{s.get('Status', '')}</td>
+                </tr>
+            """
+        table_content += "</table></div>"
 
     response_html = f"""<div style="font-family: 'Segoe UI', sans-serif;">
 <div style="background: #fff8f0; color: #844800; padding: 12px; border-radius: 4px; border-left: 4px solid #ffaa44; margin-bottom: 15px; font-size: 13px;">
 <b>📌 Actionable Next Steps</b> for Case <b>{case_id}</b>
 </div>
-{steps_html}
-{structured_html}
-<div style="font-size: 11px; color: #605e5c; margin-top: 10px;">
-<i>Click <b>Accept</b> to sync this structured plan to the Investigation Plan tab.</i>
+{items_to_html(data.get("next_steps", []))}
+{table_content}
+<div style="font-size: 11px; color: #605e5c; margin-top: 12px; background: #faf9f8; padding: 8px; border-radius: 4px;">
+💡 <i>Click <b>Accept</b> to sync these steps to the <b>Investigation Plan</b> tab.</i>
+</div>
+</div>"""
+    return response_html
+
+
+def _format_questions(data: dict) -> str:
+    """Format investigation questions as a rich HTML table."""
+    case_id = data.get("case_id", "Unknown")
+    questions = data.get("questions_to_be_answered", [])
+    
+    q_rows = ""
+    for q in questions:
+        q_rows += f"""<tr style="border-bottom: 1px dotted #edebe9;">
+            <td style="padding: 8px; color: #605e5c; width: 40px;">{q.get('Question Number', '')}</td>
+            <td style="padding: 8px;">{q.get('Question', '')}</td>
+        </tr>"""
+
+    response_html = f"""<div style="font-family: 'Segoe UI', sans-serif;">
+<div style="background: #edf2ff; color: #0037b3; padding: 12px; border-radius: 4px; border-left: 4px solid #005a9e; margin-bottom: 15px; font-size: 13px;">
+<b>❓ Key Questions to be Answered</b> for Case <b>{case_id}</b>
+</div>
+<div style="border: 1px solid #edebe9; border-radius: 4px;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 11px; color: #323130;">
+        <tr style="background: #faf9f8; border-bottom: 1px solid #edebe9;">
+            <th style="text-align: left; padding: 8px;">#</th>
+            <th style="text-align: left; padding: 8px;">Question</th>
+        </tr>
+        {q_rows}
+    </table>
+</div>
+<div style="font-size: 11px; color: #605e5c; margin-top: 12px; background: #faf9f8; padding: 8px; border-radius: 4px;">
+💡 <i>Click <b>Accept</b> to sync these questions to the <b>Investigation Plan</b> tab.</i>
 </div>
 </div>"""
     return response_html
@@ -776,9 +812,12 @@ def process_query(user_query: str) -> dict:
     if intent == "case_lookup" and case:
         response_html = _format_case_summary(case)
         pipeline[-1]["status"] = "Case summary generated"
-    elif intent == "next_steps" and case:
-        response_html = _format_next_steps(case)
-        pipeline[-1]["status"] = "Next steps generated"
+    elif intent == "next_steps":
+        response_html = _format_next_steps(data)
+        pipeline.append({"stage": "Azure OpenAI", "status": "Proposed investigative steps", "icon": "📊"})
+    elif intent == "questions_to_ask":
+        response_html = _format_questions(data)
+        pipeline.append({"stage": "Azure OpenAI", "status": "Generated investigation questions", "icon": "❓"})
     elif intent == "similar_cases" and case_id:
         pipeline[1]["status"] = f"Found {sum(len(g['cases']) for g in SIMILAR_CASES_MAP.get(case_id, {}).values())} similar cases"
         response_html = _format_similar_cases(case_id)
