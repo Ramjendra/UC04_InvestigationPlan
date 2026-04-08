@@ -22,7 +22,9 @@ st.set_page_config(
 )
 
 dv_client = DataverseClient()
-plan = dv_client.get_investigation_plan("BRI-26-11514")
+if "current_plan" not in st.session_state:
+    st.session_state.current_plan = dv_client.get_investigation_plan("BRI-26-11514")
+plan = st.session_state.current_plan
 
 # ── Global Premium CSS ──────────────────────────────────────────────────────
 st.markdown("""
@@ -177,6 +179,7 @@ if "chat_open" not in st.session_state: st.session_state.chat_open = False
 if "messages" not in st.session_state: st.session_state.messages = []
 if "ai_mode" not in st.session_state: st.session_state.ai_mode = "Simulated Mock"
 if "suggestion_prompt" not in st.session_state: st.session_state.suggestion_prompt = None
+if "handled_messages" not in st.session_state: st.session_state.handled_messages = set()
 
 # ── Sidebar — Dynamics 365 Navigation ──────────────────────────────────────
 with st.sidebar:
@@ -343,19 +346,37 @@ if st.session_state.chat_open:
             """, unsafe_allow_html=True)
 
         # ── Display existing messages ──
-        for msg in st.session_state.messages:
+        for i, msg in enumerate(st.session_state.messages):
             if msg["role"] == "user":
                 with st.chat_message("user"):
                     st.write(msg["content"])
             else:
                 with st.chat_message("assistant"):
                     content = msg["content"]
-                    if isinstance(content, dict):
-                        st.markdown(content.get("response", ""), unsafe_allow_html=True)
-                    elif "<div" in str(content):
-                        st.markdown(content, unsafe_allow_html=True)
-                    else:
-                        st.write(content)
+                    response_text = content.get("response", "") if isinstance(content, dict) else str(content)
+                    st.markdown(response_text, unsafe_allow_html=True)
+                    
+                    # Show Accept/Reject buttons for assistant messages that haven't been handled
+                    msg_id = f"msg_{i}"
+                    if msg_id not in st.session_state.handled_messages:
+                        col_acc, col_rej = st.columns(2)
+                        with col_acc:
+                            if st.button("✅ Accept", key=f"acc_{i}", use_container_width=True):
+                                # Logic to update Investigation Plan tab
+                                logger.info(f"User ACCEPTED message {i}")
+                                st.session_state.handled_messages.add(msg_id)
+                                
+                                # If the message contains a case summary or plan, update the tab
+                                if "Case Summary" in response_text or "Allegation" in response_text:
+                                    # Simple heuristic: Update the summary of allegations in the plan
+                                    st.session_state.current_plan["summary_of_allegations"] = "UPDATED VIA AI ASSISTANT: " + response_text
+                                    st.success("Data stored in Investigation Plan tab!")
+                                st.rerun()
+                        with col_rej:
+                            if st.button("❌ Reject", key=f"rej_{i}", use_container_width=True):
+                                logger.info(f"User REJECTED message {i}")
+                                st.session_state.handled_messages.add(msg_id)
+                                st.rerun()
 
         # ── Process prompt (from chip or chat input) ──
         prompt = st.session_state.suggestion_prompt
