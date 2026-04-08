@@ -363,18 +363,19 @@ if st.session_state.chat_open:
                         with col_acc:
                             if st.button("✅ Accept", key=f"acc_{i}", use_container_width=True):
                                 # Logic to update Investigation Plan tab
-                                logger.info(f"User ACCEPTED message {i}")
+                                content_preview = response_text[:100].replace('\n', ' ') + "..."
+                                logger.info(f"ACTION: User ACCEPTED message {i}. Content Preview: {content_preview}")
                                 st.session_state.handled_messages.add(msg_id)
                                 
                                 # If the message contains a case summary or plan, update the tab
-                                if "Case Summary" in response_text or "Allegation" in response_text:
-                                    # Simple heuristic: Update the summary of allegations in the plan
-                                    st.session_state.current_plan["summary_of_allegations"] = "UPDATED VIA AI ASSISTANT: " + response_text
-                                    st.success("Data stored in Investigation Plan tab!")
+                                if "Case Summary" in response_text or "Allegation" in response_text or "Next Steps" in response_text:
+                                    logger.info(f"DATA_TRANSFER: Updating Investigation Plan from message {i}")
+                                    st.session_state.current_plan["summary_of_allegations"] = f"AI Clarification ({datetime.now().strftime('%Y-%m-%d %H:%M')}): " + response_text
+                                    st.success("Changes synced to Investigation Plan!")
                                 st.rerun()
                         with col_rej:
                             if st.button("❌ Reject", key=f"rej_{i}", use_container_width=True):
-                                logger.info(f"User REJECTED message {i}")
+                                logger.info(f"ACTION: User REJECTED message {i}")
                                 st.session_state.handled_messages.add(msg_id)
                                 st.rerun()
 
