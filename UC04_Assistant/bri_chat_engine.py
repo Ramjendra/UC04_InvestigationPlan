@@ -409,33 +409,34 @@ def detect_intent(user_query: str) -> dict:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _format_case_summary(case: dict) -> str:
-    """Format case summary as rich HTML matching Image 1."""
-    return f"""<div style="font-family: 'Segoe UI', sans-serif; padding: 8px 0;">
-<div style="color: #d83b01; font-weight: 600; font-size: 14px; margin-bottom: 8px;">
-    Prompt: What is the latest on case {case['case_id']}
-</div>
-<div style="font-size: 13px; color: #323130; line-height: 1.8;">
-    <b>Case Summary: {case['case_id']}</b><br>
-    <span style="color: #0078d4;">📄</span> <b>Case Title:</b> {case['case_title']}
-    &nbsp;&nbsp;<span style="background: #dff6dd; color: #107c10; padding: 2px 8px; border-radius: 10px; font-size: 11px;">🌐 Area/Country: {case['area_country']}</span><br>
-    <span style="color: #d83b01;">👤</span> <b>Assigned Attorney:</b> {case['assigned_attorney']}<br>
-    <span style="color: #0078d4;">📅</span> <b>Key Dates:</b><br>
-    &nbsp;&nbsp;&nbsp;&nbsp;• <b>Received Date:</b> {case['received_date']}<br>
-    <span style="color: #0078d4;">📋</span> <b>Case Details:</b>
-    <ul style="margin: 4px 0 4px 20px; padding: 0;">
-        <li><b>Status:</b> {case['status']}</li>
-        <li><b>Case Resolution:</b> {case.get('case_resolution', 'N/A')}</li>
-        <li><b>Type:</b> {case['type']}</li>
-        <li><b>Issue Type:</b> {case['issue_type']}</li>
-    </ul>
-    <span style="color: #f7630c;">📝</span> <b>Allegation Summary:</b><br>
-    <div style="background: #faf9f8; border-left: 3px solid #0078d4; padding: 10px 12px; margin: 6px 0; font-size: 12px; line-height: 1.6; color: #323130;">
-        {case['allegation_summary']}
-    </div>
-    <span style="color: #0078d4;">🔗</span> <b>Links:</b><br>
-    &nbsp;&nbsp;&nbsp;&nbsp;• <b>CRM:</b> <a href="#" style="color: #0078d4; text-decoration: underline;">View CRM Details</a>
-</div>
-</div>"""
+    """Format case summary as a rich HTML table."""
+    case_id = case.get("case_id", "Unknown")
+    
+    rows_html = f"""
+    <tr style="border-bottom: 1px solid #edebe9;"><td style="padding: 8px; font-weight: 600; background: #faf9f8; width: 35%;">Case ID</td><td style="padding: 8px;">{case_id}</td></tr>
+    <tr style="border-bottom: 1px solid #edebe9;"><td style="padding: 8px; font-weight: 600; background: #faf9f8;">Title</td><td style="padding: 8px;">{case.get('case_title', 'N/A')}</td></tr>
+    <tr style="border-bottom: 1px solid #edebe9;"><td style="padding: 8px; font-weight: 600; background: #faf9f8;">Area/Country</td><td style="padding: 8px;">{case.get('area_country', 'N/A')}</td></tr>
+    <tr style="border-bottom: 1px solid #edebe9;"><td style="padding: 8px; font-weight: 600; background: #faf9f8;">Attorney</td><td style="padding: 8px;">{case.get('assigned_attorney', 'N/A')}</td></tr>
+    <tr style="border-bottom: 1px solid #edebe9;"><td style="padding: 8px; font-weight: 600; background: #faf9f8;">Status</td><td style="padding: 8px;"><span style="background: #e1dfdd; padding: 2px 6px; border-radius: 2px;">{case.get('status', 'N/A')}</span></td></tr>
+    <tr style="border-bottom: 1px solid #edebe9;"><td style="padding: 8px; font-weight: 600; background: #faf9f8;">Issue Type</td><td style="padding: 8px;">{case.get('issue_type', 'N/A')}</td></tr>
+    """
+
+    response_html = f"""<div style="font-family: 'Segoe UI', sans-serif;">
+        <div style="background: #0078d4; color: white; padding: 10px 15px; border-radius: 4px 4px 0 0; font-size: 14px; font-weight: 600;">
+            📁 Case Summary: {case_id}
+        </div>
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #edebe9; font-size: 12px; color: #323130;">
+            {rows_html}
+        </table>
+        <div style="padding: 12px; border: 1px solid #edebe9; border-top: none; background: #fff; font-size: 12px; line-height: 1.5;">
+            <b style="color: #0078d4;">Allegation:</b><br>
+            {case.get('allegation_summary', 'No summary available.')}
+        </div>
+        <div style="font-size: 11px; color: #605e5c; margin-top: 10px;">
+            <i>Click <b>Accept</b> to sync this summary to the Profile and Allegation tabs.</i>
+        </div>
+    </div>"""
+    return response_html
 
 
 def _format_next_steps(data: dict) -> str:
