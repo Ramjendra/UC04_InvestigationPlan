@@ -19,12 +19,12 @@ log = logging.getLogger("uc04.agent")
 
 AZURE_OPENAI_ENDPOINT   = os.getenv("AZURE_OPENAI_ENDPOINT", "")
 AZURE_OPENAI_KEY        = os.getenv("AZURE_OPENAI_KEY", "")
-AZURE_OPENAI_DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o")
-AZURE_OPENAI_API_VERSION = "2024-05-01-preview"
+AZURE_OPENAI_DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4.1")
+AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2025-01-01")
 
 AZURE_SEARCH_ENDPOINT   = os.getenv("AZURE_SEARCH_ENDPOINT", "")
 AZURE_SEARCH_KEY        = os.getenv("AZURE_SEARCH_KEY", "")
-AZURE_SEARCH_INDEX      = os.getenv("AZURE_SEARCH_INDEX", "cela-knowledgebase")
+AZURE_SEARCH_INDEX      = os.getenv("AZURE_SEARCH_INDEX", "INSSGSGSG")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
