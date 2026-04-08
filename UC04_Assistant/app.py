@@ -8,8 +8,10 @@ from dotenv import load_dotenv
 from simulated_data import EXISTING_CASES, ATTORNEYS, DATA_SOURCES, KNOWLEDGE_BASE
 from plan_agent import run_plan_agent
 from dataverse_client import DataverseClient
+from logger_config import logger
 
 load_dotenv()
+logger.info("--- BRI Assistant Starting Up ---")
 
 # ── Page Config ──────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -363,14 +365,20 @@ if st.session_state.chat_open:
             prompt = st.chat_input("Ask about BRI cases... (e.g., BRI-26-08314)", key="bri_chat_input")
 
         if prompt:
+            logger.info(f"User submitted prompt: {prompt}")
             st.session_state.messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.write(prompt)
             
             with st.spinner("🔍 Searching Dataverse → 🧠 Embeddings → 📚 AI Search → 💬 Response..."):
-                from assistant_agent import get_assistant_response
-                history = [{"role": m["role"], "content": m["content"] if isinstance(m["content"], str) else m["content"].get("response", "")} for m in st.session_state.messages[:-1]]
-                response = asyncio.run(get_assistant_response(prompt, history, st.session_state.ai_mode))
+                try:
+                    from assistant_agent import get_assistant_response
+                    history = [{"role": m["role"], "content": m["content"] if isinstance(m["content"], str) else m["content"].get("response", "")} for m in st.session_state.messages[:-1]]
+                    response = asyncio.run(get_assistant_response(prompt, history, st.session_state.ai_mode))
+                    logger.info("Successfully retrieved assistant response")
+                except Exception as e:
+                    logger.error(f"Error in get_assistant_response: {str(e)}")
+                    response = "I encountered an error while processing your request. Please check the logs."
             
             # Store and render
             if isinstance(response, dict):

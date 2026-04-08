@@ -9,9 +9,9 @@ import os
 import json
 import logging
 from dotenv import load_dotenv
+from logger_config import logger
 
 load_dotenv()
-log = logging.getLogger("uc04.agent")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # AZURE CONFIGURATION (from .env)
@@ -57,9 +57,11 @@ async def get_assistant_response(user_query: str, chat_history: list, ai_mode: s
     Primary orchestrator for the BRI Agent.
     Prioritizes Azure OpenAI + Azure Search ('On Your Data') flow.
     """
+    logger.info(f"get_assistant_response called with mode: {ai_mode}")
     
     # Check if we should use Mock (only if selected OR keys are missing)
     if ai_mode == "Simulated Mock":
+        logger.info("Routing to Simulated Mock engine")
         from bri_chat_engine import process_query
         return process_query(user_query)
 
@@ -69,12 +71,12 @@ async def get_assistant_response(user_query: str, chat_history: list, ai_mode: s
     
     # Check for keys (using default values from .env)
     if not AZURE_OPENAI_KEY or "your-" in AZURE_OPENAI_KEY:
-        if ai_mode == "Live Azure Foundry":
-            log.warning("Azure OpenAI keys not found — using simulated mode for demo safety")
+        logger.warning("Azure OpenAI keys not found in .env — falling back to mock engine for safety")
         from bri_chat_engine import process_query
         return process_query(user_query)
 
     try:
+        logger.info(f"Connecting to Azure OpenAI at {AZURE_OPENAI_ENDPOINT}")
         from openai import AsyncAzureOpenAI
         client = AsyncAzureOpenAI(
             azure_endpoint=AZURE_OPENAI_ENDPOINT,
@@ -99,23 +101,25 @@ async def get_assistant_response(user_query: str, chat_history: list, ai_mode: s
                     "type": "api_key",
                     "key": AZURE_SEARCH_KEY,
                 },
-                "query_type": "vector_semantic_hybrid", # Modern hybrid search
+                "query_type": "vector_semantic_hybrid",
                 "in_scope": True,
                 "top_n_documents": 5,
                 "strictness": 2,
                 "embedding_dependency": {
                     "type": "deployment_name",
-                    "deployment_name": "text-embedding-ada-002", # Required for vectorized data
+                    "deployment_name": "text-embedding-ada-002",
                 },
             },
         }
 
+        logger.info(f"Querying Azure OpenAI with On-Your-Data (Index: {AZURE_SEARCH_INDEX})")
         response = await client.chat.completions.create(
             model=AZURE_OPENAI_DEPLOYMENT,
             messages=messages,
-            temperature=0, # Better accuracy for retrieval
+            temperature=0,
             extra_body={"data_sources": [data_source_params]},
         )
+        logger.info("Received response from Azure OpenAI")
 
         answer = response.choices[0].message.content
 

@@ -7,8 +7,7 @@ Handles: case lookup, next steps, similar cases, attorney info, investigation pl
 
 import re
 import logging
-
-log = logging.getLogger("uc04.bri_chat")
+from logger_config import logger
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SIMULATED DATAVERSE — BRI CASES DATABASE
@@ -808,5 +807,5 @@ def process_query(user_query: str) -> dict:
         </div>"""
         pipeline[-1]["status"] = "General help response"
 
-    log.info("BRI Chat: intent=%s, case_id=%s", intent, case_id)
+    logger.info(f"Mock Engine: Processed intent={intent}, case_id={case_id}")
     return {"response": response_html, "pipeline_stages": pipeline, "intent": intent}
