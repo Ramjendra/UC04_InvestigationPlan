@@ -422,20 +422,20 @@ def _format_case_summary(case: dict) -> str:
     """
 
     response_html = f"""<div style="font-family: 'Segoe UI', sans-serif;">
-        <div style="background: #0078d4; color: white; padding: 10px 15px; border-radius: 4px 4px 0 0; font-size: 14px; font-weight: 600;">
-            📁 Case Summary: {case_id}
-        </div>
-        <table style="width: 100%; border-collapse: collapse; border: 1px solid #edebe9; font-size: 12px; color: #323130;">
-            {rows_html}
-        </table>
-        <div style="padding: 12px; border: 1px solid #edebe9; border-top: none; background: #fff; font-size: 12px; line-height: 1.5;">
-            <b style="color: #0078d4;">Allegation:</b><br>
-            {case.get('allegation_summary', 'No summary available.')}
-        </div>
-        <div style="font-size: 11px; color: #605e5c; margin-top: 10px;">
-            <i>Click <b>Accept</b> to sync this summary to the Profile and Allegation tabs.</i>
-        </div>
-    </div>"""
+<div style="background: #0078d4; color: white; padding: 10px 15px; border-radius: 4px 4px 0 0; font-size: 14px; font-weight: 600;">
+📁 Case Summary: {case_id}
+</div>
+<table style="width: 100%; border-collapse: collapse; border: 1px solid #edebe9; font-size: 12px; color: #323130;">
+{rows_html}
+</table>
+<div style="padding: 12px; border: 1px solid #edebe9; border-top: none; background: #fff; font-size: 12px; line-height: 1.5;">
+<b style="color: #0078d4;">Allegation:</b><br>
+{case.get('allegation_summary', 'No summary available.')}
+</div>
+<div style="font-size: 11px; color: #605e5c; margin-top: 10px;">
+<i>Click <b>Accept</b> to sync this summary to the Profile and Allegation tabs.</i>
+</div>
+</div>"""
     return response_html
 
 
@@ -470,20 +470,24 @@ def _format_next_steps(data: dict) -> str:
                     <td style="padding: 8px;">{s['Step']}</td>
                     <td style="padding: 8px;">{s['Owner']}</td>
                     <td style="padding: 8px;">{s['Due Date']}</td>
-                </tr>
-            """
+<tr style="border-bottom: 1px dotted #edebe9;">
+<td style="padding: 8px;">{s['Step']}</td>
+<td style="padding: 8px;">{s['Owner']}</td>
+<td style="padding: 8px;">{s['Due Date']}</td>
+</tr>
+"""
         structured_html += "</table></div>"
 
     response_html = f"""<div style="font-family: 'Segoe UI', sans-serif;">
-        <div style="background: #fff8f0; color: #844800; padding: 12px; border-radius: 4px; border-left: 4px solid #ffaa44; margin-bottom: 15px; font-size: 13px;">
-            <b>📌 Actionable Next Steps</b> for Case <b>{case_id}</b>
-        </div>
-        {steps_html}
-        {structured_html}
-        <div style="font-size: 11px; color: #605e5c; margin-top: 10px;">
-            <i>Click <b>Accept</b> to sync this structured plan to the Investigation Plan tab.</i>
-        </div>
-    </div>"""
+<div style="background: #fff8f0; color: #844800; padding: 12px; border-radius: 4px; border-left: 4px solid #ffaa44; margin-bottom: 15px; font-size: 13px;">
+<b>📌 Actionable Next Steps</b> for Case <b>{case_id}</b>
+</div>
+{steps_html}
+{structured_html}
+<div style="font-size: 11px; color: #605e5c; margin-top: 10px;">
+<i>Click <b>Accept</b> to sync this structured plan to the Investigation Plan tab.</i>
+</div>
+</div>"""
     return response_html
 
 
