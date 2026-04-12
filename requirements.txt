@@ -1,23 +1,7 @@
 # ══════════════════════════════════════════════════════════════════════════════
-# UC-03 Smart Triage — Python Requirements
+# UC-04 Investigation Plan — Python Requirements
 # Install: pip install -r requirements.txt
 # ══════════════════════════════════════════════════════════════════════════════
-
-# ── System Prerequisite: Ollama (must be installed before running the app) ────
-#
-#   Linux / macOS:
-#     curl -fsSL https://ollama.com/install.sh | sh
-#
-#   Windows:
-#     Download installer from https://ollama.com/download
-#
-#   After installing Ollama, pull the model:
-#     ollama pull llama3.1
-#
-#   Start the Ollama server (if not already running):
-#     ollama serve
-#
-# ─────────────────────────────────────────────────────────────────────────────
 
 # Excel file reading — used to load all UCM xlsx data files
 openpyxl>=3.1.0
@@ -28,3 +12,11 @@ python-dotenv>=1.0.0
 
 # Streamlit — web UI
 streamlit>=1.30.0
+
+# AI and Cloud Services
+openai>=1.0.0
+azure-ai-projects
+azure-identity
+msal
+requests
+
