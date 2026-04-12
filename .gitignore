@@ -12,4 +12,5 @@ __pycache__/
 *.jpg
 *.jpeg
 *.gif
+sync_data.json
 
