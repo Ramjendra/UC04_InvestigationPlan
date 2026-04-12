@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BRI Assistant API Tester</title>
+    <title>BRI Assistant — Enhanced API Tester</title>
     <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -12,7 +13,9 @@
             --crm-light: #faf9f8;
             --crm-border: #edebe9;
             --crm-bg: #ffffff;
-            --glass-bg: rgba(255, 255, 255, 0.8);
+            --crm-green: #107c10;
+            --crm-red: #d13438;
+            --crm-gray: #605e5c;
         }
 
         * {
@@ -23,7 +26,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f3f2f1 0%, #edebe9 100%);
+            background: #f3f2f1;
             color: var(--crm-dark);
             height: 100vh;
             display: flex;
@@ -31,353 +34,436 @@
             overflow: hidden;
         }
 
+        /* --- Header --- */
         header {
             background: var(--crm-bg);
-            padding: 15px 30px;
+            padding: 12px 24px;
             border-bottom: 2px solid var(--crm-blue);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            z-index: 100;
         }
 
-        header h1 {
-            font-size: 18px;
+        header .logo {
+            font-size: 16px;
+            font-weight: 700;
             color: var(--crm-blue);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
-        .container {
-            flex: 1;
+        .header-controls {
             display: flex;
-            padding: 30px;
-            gap: 30px;
-            overflow: hidden;
-        }
-
-        /* --- Sidebar / Controls --- */
-        .controls {
-            width: 320px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--crm-border);
-            border-radius: 12px;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        }
-
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #605e5c;
-            text-transform: uppercase;
-        }
-
-        select, input, button {
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid var(--crm-border);
-            font-size: 14px;
-            outline: none;
-            transition: all 0.2s;
-        }
-
-        select:focus, input:focus {
-            border-color: var(--crm-blue);
-            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.1);
-        }
-
-        button {
-            background: var(--crm-blue);
-            color: white;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            display: flex;
+            gap: 15px;
             align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 10px;
         }
 
-        button:hover {
-            background: #005a9e;
-            transform: translateY(-1px);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        /* --- Chat Interface --- */
-        .chat-panel {
-            flex: 1;
-            background: var(--crm-bg);
+        .settings-compact {
+            font-size: 11px;
+            color: var(--crm-gray);
+            background: #f3f2f1;
+            padding: 4px 12px;
+            border-radius: 4px;
             border: 1px solid var(--crm-border);
-            border-radius: 12px;
+            display: flex;
+            gap: 10px;
+        }
+
+        /* --- Main Layout --- */
+        .app-shell {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* --- Chat Section (Left) --- */
+        .chat-section {
+            flex: 1.2;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            overflow: hidden;
+            background: white;
+            border-right: 1px solid var(--crm-border);
         }
 
         #chat-window {
             flex: 1;
-            padding: 30px;
+            padding: 24px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 16px;
             background: #faf9f8;
         }
 
-        .message {
-            max-width: 85%;
-            padding: 16px 20px;
-            border-radius: 12px;
-            font-size: 14px;
-            line-height: 1.6;
-            position: relative;
-            animation: fadeIn 0.3s ease;
+        /* --- Investigation Plan Section (Right) --- */
+        .plan-section {
+            flex: 0.8;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            padding: 0;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .plan-header {
+            padding: 16px 24px;
+            background: #f8f8f8;
+            border-bottom: 1px solid var(--crm-border);
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #plan-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            font-size: 13px;
+        }
+
+        .empty-plan {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--crm-gray);
+            text-align: center;
+            gap: 12px;
+            opacity: 0.6;
+        }
+
+        /* --- Messages --- */
+        .message {
+            max-width: 90%;
+            padding: 14px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+            position: relative;
+            animation: slideIn 0.2s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .message.user {
             align-self: flex-end;
-            background: var(--crm-blue);
-            color: white;
-            border-bottom-right-radius: 2px;
+            background: #e1dfdd;
+            color: var(--crm-dark);
+            border: 1px solid #d2d0ce;
         }
 
         .message.assistant {
             align-self: flex-start;
             background: white;
-            color: var(--crm-dark);
             border: 1px solid var(--crm-border);
-            border-bottom-left-radius: 2px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
         }
 
-        .message .meta {
+        .message .sender {
             font-size: 10px;
-            margin-bottom: 8px;
-            font-weight: 600;
-            opacity: 0.8;
+            font-weight: 700;
+            color: var(--crm-blue);
+            margin-bottom: 6px;
+            text-transform: uppercase;
         }
 
-        /* --- Pipeline Stages --- */
-        .pipeline-tray {
+        /* --- Action Buttons --- */
+        .actions-tray {
             display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #f3f2f1;
         }
 
-        .stage-badge {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            background: #f3f2f1;
-            border-radius: 20px;
+        .btn-action {
+            padding: 6px 16px;
+            border-radius: 4px;
             font-size: 11px;
             font-weight: 600;
-            color: #605e5c;
-            border: 1px solid #edebe9;
+            cursor: pointer;
+            transition: all 0.1s;
+            border: 1px solid transparent;
         }
 
+        .btn-accept {
+            background: var(--crm-blue);
+            color: white;
+        }
+
+        .btn-accept:hover {
+            background: #005a9e;
+        }
+
+        .btn-reject {
+            background: #f3f2f1;
+            color: var(--crm-gray);
+            border-color: var(--crm-border);
+        }
+
+        .btn-reject:hover {
+            background: #edebe9;
+        }
+
+        /* --- Input Area --- */
         .input-area {
-            padding: 20px 30px;
+            padding: 16px 24px;
             background: white;
             border-top: 1px solid var(--crm-border);
             display: flex;
-            gap: 15px;
+            gap: 12px;
         }
 
         #user-input {
             flex: 1;
+            padding: 10px 14px;
+            border: 1px solid var(--crm-border);
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
         }
 
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 5px;
+        #user-input:focus {
+            border-color: var(--crm-blue);
         }
 
-        .status-online { background: #107c10; box-shadow: 0 0 5px #107c10; }
-        .status-offline { background: #d13438; }
+        #send-btn {
+            background: var(--crm-blue);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+        }
 
-        /* Loader */
-        .loader {
+        /* --- Badges --- */
+        .badge-tray {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .badge {
+            font-size: 9px;
+            background: #f3f2f1;
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: var(--crm-gray);
+            border: 1px solid #edebe9;
+        }
+
+        /* Notifications */
+        .sync-toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--crm-green);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             display: none;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid var(--crm-blue);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+            z-index: 1000;
+            animation: popUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @keyframes popUp {
+            from {
+                bottom: -50px;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 20px;
+                opacity: 1;
+            }
         }
     </style>
 </head>
+
 <body>
 
-<header>
-    <h1>📋 BRI Investigation Assistant <span>API Tester</span></h1>
-    <div id="api-status">
-        <span class="status-dot status-offline"></span>
-        <span style="font-size: 12px; font-weight: 600;">API Offline</span>
-    </div>
-</header>
-
-<div class="container">
-    <div class="controls">
-        <div class="control-group">
-            <label>API Endpoint</label>
-            <input type="text" id="api-url" value="http://localhost:8000" placeholder="http://localhost:8000">
+    <header>
+        <div class="logo">
+            <span style="font-size: 20px;">🤖</span>
+            <span>BRI Investigation <span style="font-weight: 400; opacity: 0.7;">Assistant</span></span>
         </div>
-        
-        <div class="control-group">
-            <label>AI Mode</label>
-            <select id="ai-mode">
-                <option value="Simulated Mock">Simulated Mock</option>
-                <option value="Live Azure Foundry">Live Azure Foundry</option>
-            </select>
+        <div class="header-controls">
+            <div class="settings-compact">
+                <span><b>API:</b> localhost:8000</span>
+                <span><b>Mode:</b> <span id="current-mode">Simulated Mock</span></span>
+            </div>
+            <div id="status-tag" style="font-size: 11px; font-weight: 700; color: var(--crm-green);">● ONLINE</div>
         </div>
+    </header>
 
-        <button onclick="checkStatus()">
-            🔄 Check API Status
-        </button>
+    <div class="app-shell">
+        <!-- CHAT SECTION -->
+        <div class="chat-section">
+            <div id="chat-window">
+                <div class="message assistant">
+                    <div class="sender">BRI Assistant Agent</div>
+                    <div class="content">
+                        Greetings. Please provide a <b>Case ID</b> (e.g., BRI-26-08314) or describe an incident to begin
+                        the investigation planning process.
+                    </div>
+                </div>
+            </div>
 
-        <div style="margin-top: auto; font-size: 11px; color: #605e5c; line-height: 1.4;">
-            <b>Instructions:</b><br>
-            1. Ensure FastAPI server is running on port 8000.<br>
-            2. Type a Case ID (e.g., BRI-26-08314) or a general query.<br>
-            3. Select mode and click Send.
-        </div>
-    </div>
-
-    <div class="chat-panel">
-        <div id="chat-window">
-            <div class="message assistant">
-                <div class="meta">SYSTEM</div>
-                Welcome to the BRI Assistant API Tester. How can I help you today?
+            <div class="input-area">
+                <input type="text" id="user-input" placeholder="Type case ID or question..."
+                    onkeypress="if(event.key==='Enter') sendMessage()">
+                <button id="send-btn" onclick="sendMessage()">Send</button>
             </div>
         </div>
-        
-        <div class="input-area">
-            <input type="text" id="user-input" placeholder="Enter Case ID or query..." onkeypress="if(event.key==='Enter') sendMessage()">
-            <button onclick="sendMessage()" id="send-btn">
-                <span>Send</span>
-                <div class="loader" id="loader"></div>
-            </button>
+
+        <!-- INVESTIGATION PLAN SECTION -->
+        <div class="plan-section">
+            <div class="plan-header">
+                <span>📋 Investigation Planning Tab</span>
+                <span style="font-size: 10px; opacity: 0.5; font-weight: 400;">WORKSPACE</span>
+            </div>
+            <div id="plan-content">
+                <div class="empty-plan" id="empty-state">
+                    <span style="font-size: 40px;">📂</span>
+                    <div>No active investigation plan.<br>Accept a summary from the chat to sync data here.</div>
+                </div>
+                <div id="synced-data" style="display: none;">
+                    <!-- Sync content goes here -->
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    const chatWindow = document.getElementById('chat-window');
-    const userInput = document.getElementById('user-input');
-    const apiStatus = document.getElementById('api-status');
-    const loader = document.getElementById('loader');
-    const sendBtn = document.getElementById('send-btn');
+    <div id="toast" class="sync-toast">✅ Sync Successful: Investigation Plan Updated</div>
 
-    async function checkStatus() {
-        const url = document.getElementById('api-url').value;
-        try {
-            const res = await fetch(`${url}/`);
-            if (res.ok) {
-                apiStatus.innerHTML = '<span class="status-dot status-online"></span><span style="font-size: 12px; font-weight: 600;">API Online</span>';
-            } else {
-                throw new Error();
+    <script>
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('user-input');
+        const syncedData = document.getElementById('synced-data');
+        const emptyState = document.getElementById('empty-state');
+        const toast = document.getElementById('toast');
+
+        let currentAIResponse = null;
+
+        function appendMessage(role, content, stages = []) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${role}`;
+
+            const sender = role === 'user' ? 'Direct Input' : 'BRI Assistant Agent';
+
+            let badges = '';
+            if (stages.length > 0) {
+                badges = '<div class="badge-tray">';
+                stages.forEach(s => badges += `<span class="badge">${s.icon} ${s.stage}</span>`);
+                badges += '</div>';
             }
-        } catch (e) {
-            apiStatus.innerHTML = '<span class="status-dot status-offline"></span><span style="font-size: 12px; font-weight: 600;">API Offline</span>';
-        }
-    }
 
-    function appendMessage(role, content, stages = []) {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${role}`;
-        
-        let stagesHtml = '';
-        if (stages.length > 0) {
-            stagesHtml = '<div class="pipeline-tray">';
-            stages.forEach(s => {
-                stagesHtml += `<div class="stage-badge">${s.icon} ${s.stage}</div>`;
-            });
-            stagesHtml += '</div>';
-        }
+            let actions = '';
+            if (role === 'assistant') {
+                actions = `
+                <div class="actions-tray">
+                    <button class="btn-action btn-accept" onclick="syncData(this)">Accept & Sync</button>
+                    <button class="btn-action btn-reject" onclick="rejectData(this)">Reject</button>
+                </div>
+            `;
+                currentAIResponse = content; // Store the last response for syncing
+            }
 
-        msgDiv.innerHTML = `
-            <div class="meta">${role.toUpperCase()}</div>
+            msgDiv.innerHTML = `
+            <div class="sender">${sender}</div>
             <div class="content">${content}</div>
-            ${stagesHtml}
+            ${badges}
+            ${actions}
         `;
-        
-        chatWindow.appendChild(msgDiv);
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
 
-    async function sendMessage() {
-        const query = userInput.value.trim();
-        if (!query) return;
-
-        const url = document.getElementById('api-url').value;
-        const mode = document.getElementById('ai-mode').value;
-
-        appendMessage('user', query);
-        userInput.value = '';
-        
-        // Show loader
-        loader.style.display = 'block';
-        sendBtn.querySelector('span').style.display = 'none';
-
-        try {
-            const response = await fetch(`${url}/chat`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: query, ai_mode: mode })
-            });
-
-            if (!response.ok) throw new Error('API request failed');
-
-            const data = await response.json();
-            appendMessage('assistant', data.response, data.pipeline_stages);
-
-        } catch (error) {
-            appendMessage('assistant', `<span style="color: #d13438;">Error: ${error.message}. Please check if the API is running and CORS is enabled.</span>`);
-        } finally {
-            loader.style.display = 'none';
-            sendBtn.querySelector('span').style.display = 'inline';
+            chatWindow.appendChild(msgDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
         }
-    }
 
-    // Initial check
-    checkStatus();
-</script>
+        async function sendMessage() {
+            const query = userInput.value.trim();
+            if (!query) return;
+
+            appendMessage('user', query);
+            userInput.value = '';
+
+            try {
+                const response = await fetch('http://localhost:8000/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query, ai_mode: "Simulated Mock" })
+                });
+
+                if (!response.ok) throw new Error('API request failed');
+
+                const data = await response.json();
+                appendMessage('assistant', data.response, data.pipeline_stages);
+
+            } catch (error) {
+                appendMessage('assistant', `<span style="color: var(--crm-red);">Connectivity Error: Ensure FastAPI is running on port 8000.</span>`);
+            }
+        }
+
+        function syncData(btn) {
+            // Find the content sibling of the button's parent (actions-tray)
+            const content = btn.parentElement.previousElementSibling.previousElementSibling.innerHTML;
+
+            // Update Plan Page
+            emptyState.style.display = 'none';
+            syncedData.style.display = 'block';
+
+            // Wrap content in a clean Dynamics-style card
+            syncedData.innerHTML = `
+            <div style="border: 1px solid var(--crm-border); padding: 20px; border-radius: 4px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <div style="color: var(--crm-blue); font-weight: 700; margin-bottom: 15px; border-bottom: 1px solid #f3f2f1; padding-bottom: 8px;">
+                    SYNCED CASE DATA
+                </div>
+                ${content}
+            </div>
+            <div style="margin-top: 15px; font-size: 11px; color: var(--crm-green); font-weight: 600;">
+                ✓ This record is now live in the Investigation Planning Tab.
+            </div>
+        `;
+
+            // Mark message as accepted
+            btn.innerHTML = '✓ Synced';
+            btn.disabled = true;
+            btn.nextElementSibling.style.display = 'none';
+            btn.parentElement.parentElement.style.borderLeft = '4px solid var(--crm-green)';
+
+            // Show Toast
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2500);
+        }
+
+        function rejectData(btn) {
+            btn.innerHTML = 'Rejected';
+            btn.disabled = true;
+            btn.previousElementSibling.style.display = 'none';
+            btn.parentElement.parentElement.style.opacity = '0.5';
+        }
+    </script>
 
 </body>
+
 </html>
