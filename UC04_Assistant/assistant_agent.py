@@ -154,6 +154,6 @@ async def get_assistant_response(user_query: str, chat_history: list, ai_mode: s
         }
 
     except Exception as e:
-        log.error("Azure OpenAI call failed: %s — falling back to mock", str(e))
+        logger.error("Azure OpenAI call failed: %s — falling back to mock", str(e))
         from bri_chat_engine import process_query
         return process_query(user_query)

@@ -812,12 +812,13 @@ def process_query(user_query: str) -> dict:
     if intent == "case_lookup" and case:
         response_html = _format_case_summary(case)
         pipeline[-1]["status"] = "Case summary generated"
-    elif intent == "next_steps":
-        response_html = _format_next_steps(data)
+    elif intent == "next_steps" and case:
+        response_html = _format_next_steps(case)
         pipeline.append({"stage": "Azure OpenAI", "status": "Proposed investigative steps", "icon": "📊"})
-    elif intent == "questions_to_ask":
-        response_html = _format_questions(data)
+    elif intent == "questions_to_ask" and case:
+        response_html = _format_questions(case)
         pipeline.append({"stage": "Azure OpenAI", "status": "Generated investigation questions", "icon": "❓"})
+
     elif intent == "similar_cases" and case_id:
         pipeline[1]["status"] = f"Found {sum(len(g['cases']) for g in SIMILAR_CASES_MAP.get(case_id, {}).values())} similar cases"
         response_html = _format_similar_cases(case_id)
