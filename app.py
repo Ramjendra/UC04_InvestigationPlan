@@ -390,11 +390,19 @@ with main_col:
                 # If timestamp is new, notify user
                 st.success(f"🤖 AI suggestion available (Synced at {sync_data.get('timestamp')})")
                 if st.button("Apply Sycned AI Suggestion"):
-                    st.session_state.bci_synopsis = sync_data.get("summary", "")
+                    # Update both the display variable and the component's internal state (key)
+                    new_val = sync_data.get("summary", "")
+                    st.session_state.bci_synopsis = new_val
                     st.session_state.last_sync_time = sync_data.get("timestamp")
+                    
+                    # Force update the widget keys if they exist
+                    st.session_state["synopsis_area_live"] = new_val
+                    
                     st.toast("Investigation Plan Updated!")
+                    st.rerun()
             except:
                 pass
+
 
         st.markdown("""
 <div style="display:flex; justify-content:flex-end; gap:15px; font-size:11px; color:#605e5c; padding:8px 0; border-bottom:1px solid #edebe9;">
