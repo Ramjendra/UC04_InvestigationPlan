@@ -1,22 +1,30 @@
 # ══════════════════════════════════════════════════════════════════════════════
-# UC-04 Investigation Plan — Python Requirements
+# BRI Investigation Assistant — Global Python Requirements
+# Supports: Streamlit Frontend & Chatbot API
 # Install: pip install -r requirements.txt
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Excel file reading — used to load all UCM xlsx data files
+# Core Data & Excel
 openpyxl>=3.1.0
 pandas>=2.0.0
 
-# Environment variable management (.env file support)
+# Environment & Utilities
 python-dotenv>=1.0.0
+requests>=2.31.0
 
-# Streamlit — web UI
+# Streamlit — Web UI
 streamlit>=1.30.0
 
-# AI and Cloud Services
+# FastAPI — API Server
+fastapi>=0.100.0
+uvicorn>=0.23.0
+pydantic>=2.0.0
+
+# AI & Cloud Services
 openai>=1.0.0
+azure-search-documents>=11.4.0
 azure-ai-projects
 azure-identity
 msal
-requests
+
 
