@@ -311,6 +311,10 @@ with st.sidebar:
     
     st.markdown('<div class="sidebar-header">Other Tools</div>', unsafe_allow_html=True)
     st.markdown("PMO Link")
+    
+    st.markdown('<div class="sidebar-header">API Explorer</div>', unsafe_allow_html=True)
+    st.markdown("[🚀 Chatbot API Docs](http://localhost:8000/docs)")
+    st.markdown("[🧪 API Test UI](http://localhost:8080/api_test_ui.html)")
 
 # ── Dynamic Layout Wrapper ──────────────────────────────────────────
 if st.session_state.show_assistant:
