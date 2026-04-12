@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRI Assistant API Tester</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --crm-blue: #0078d4;
+            --crm-dark: #323130;
+            --crm-light: #faf9f8;
+            --crm-border: #edebe9;
+            --crm-bg: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.8);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f3f2f1 0%, #edebe9 100%);
+            color: var(--crm-dark);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            background: var(--crm-bg);
+            padding: 15px 30px;
+            border-bottom: 2px solid var(--crm-blue);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        header h1 {
+            font-size: 18px;
+            color: var(--crm-blue);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            padding: 30px;
+            gap: 30px;
+            overflow: hidden;
+        }
+
+        /* --- Sidebar / Controls --- */
+        .controls {
+            width: 320px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--crm-border);
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #605e5c;
+            text-transform: uppercase;
+        }
+
+        select, input, button {
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--crm-border);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--crm-blue);
+            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.1);
+        }
+
+        button {
+            background: var(--crm-blue);
+            color: white;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #005a9e;
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* --- Chat Interface --- */
+        .chat-panel {
+            flex: 1;
+            background: var(--crm-bg);
+            border: 1px solid var(--crm-border);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        #chat-window {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: #faf9f8;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: var(--crm-blue);
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+            background: white;
+            color: var(--crm-dark);
+            border: 1px solid var(--crm-border);
+            border-bottom-left-radius: 2px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .message .meta {
+            font-size: 10px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            opacity: 0.8;
+        }
+
+        /* --- Pipeline Stages --- */
+        .pipeline-tray {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .stage-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: #f3f2f1;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #605e5c;
+            border: 1px solid #edebe9;
+        }
+
+        .input-area {
+            padding: 20px 30px;
+            background: white;
+            border-top: 1px solid var(--crm-border);
+            display: flex;
+            gap: 15px;
+        }
+
+        #user-input {
+            flex: 1;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .status-online { background: #107c10; box-shadow: 0 0 5px #107c10; }
+        .status-offline { background: #d13438; }
+
+        /* Loader */
+        .loader {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--crm-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>📋 BRI Investigation Assistant <span>API Tester</span></h1>
+    <div id="api-status">
+        <span class="status-dot status-offline"></span>
+        <span style="font-size: 12px; font-weight: 600;">API Offline</span>
+    </div>
+</header>
+
+<div class="container">
+    <div class="controls">
+        <div class="control-group">
+            <label>API Endpoint</label>
+            <input type="text" id="api-url" value="http://localhost:8000" placeholder="http://localhost:8000">
+        </div>
+        
+        <div class="control-group">
+            <label>AI Mode</label>
+            <select id="ai-mode">
+                <option value="Simulated Mock">Simulated Mock</option>
+                <option value="Live Azure Foundry">Live Azure Foundry</option>
+            </select>
+        </div>
+
+        <button onclick="checkStatus()">
+            🔄 Check API Status
+        </button>
+
+        <div style="margin-top: auto; font-size: 11px; color: #605e5c; line-height: 1.4;">
+            <b>Instructions:</b><br>
+            1. Ensure FastAPI server is running on port 8000.<br>
+            2. Type a Case ID (e.g., BRI-26-08314) or a general query.<br>
+            3. Select mode and click Send.
+        </div>
+    </div>
+
+    <div class="chat-panel">
+        <div id="chat-window">
+            <div class="message assistant">
+                <div class="meta">SYSTEM</div>
+                Welcome to the BRI Assistant API Tester. How can I help you today?
+            </div>
+        </div>
+        
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Enter Case ID or query..." onkeypress="if(event.key==='Enter') sendMessage()">
+            <button onclick="sendMessage()" id="send-btn">
+                <span>Send</span>
+                <div class="loader" id="loader"></div>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const chatWindow = document.getElementById('chat-window');
+    const userInput = document.getElementById('user-input');
+    const apiStatus = document.getElementById('api-status');
+    const loader = document.getElementById('loader');
+    const sendBtn = document.getElementById('send-btn');
+
+    async function checkStatus() {
+        const url = document.getElementById('api-url').value;
+        try {
+            const res = await fetch(`${url}/`);
+            if (res.ok) {
+                apiStatus.innerHTML = '<span class="status-dot status-online"></span><span style="font-size: 12px; font-weight: 600;">API Online</span>';
+            } else {
+                throw new Error();
+            }
+        } catch (e) {
+            apiStatus.innerHTML = '<span class="status-dot status-offline"></span><span style="font-size: 12px; font-weight: 600;">API Offline</span>';
+        }
+    }
+
+    function appendMessage(role, content, stages = []) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${role}`;
+        
+        let stagesHtml = '';
+        if (stages.length > 0) {
+            stagesHtml = '<div class="pipeline-tray">';
+            stages.forEach(s => {
+                stagesHtml += `<div class="stage-badge">${s.icon} ${s.stage}</div>`;
+            });
+            stagesHtml += '</div>';
+        }
+
+        msgDiv.innerHTML = `
+            <div class="meta">${role.toUpperCase()}</div>
+            <div class="content">${content}</div>
+            ${stagesHtml}
+        `;
+        
+        chatWindow.appendChild(msgDiv);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    async function sendMessage() {
+        const query = userInput.value.trim();
+        if (!query) return;
+
+        const url = document.getElementById('api-url').value;
+        const mode = document.getElementById('ai-mode').value;
+
+        appendMessage('user', query);
+        userInput.value = '';
+        
+        // Show loader
+        loader.style.display = 'block';
+        sendBtn.querySelector('span').style.display = 'none';
+
+        try {
+            const response = await fetch(`${url}/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: query, ai_mode: mode })
+            });
+
+            if (!response.ok) throw new Error('API request failed');
+
+            const data = await response.json();
+            appendMessage('assistant', data.response, data.pipeline_stages);
+
+        } catch (error) {
+            appendMessage('assistant', `<span style="color: #d13438;">Error: ${error.message}. Please check if the API is running and CORS is enabled.</span>`);
+        } finally {
+            loader.style.display = 'none';
+            sendBtn.querySelector('span').style.display = 'inline';
+        }
+    }
+
+    // Initial check
+    checkStatus();
+</script>
+
+</body>
+</html>
