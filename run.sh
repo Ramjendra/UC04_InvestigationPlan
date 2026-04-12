@@ -31,29 +31,41 @@ fi
 # ── Activate venv ────────────────────────────────────────────────────────────
 source .venv/bin/activate
 
-# ── 3. Handle Arguments ──────────────────────────────────────────────────────
+# ── Detect Network IP ────────────────────────────────────────────────────────
+IP_ADDR=$(hostname -I | awk '{print $1}')
+[ -z "$IP_ADDR" ] && IP_ADDR="localhost"
+
+# ── Handle Arguments ─────────────────────────────────────────────────────────
 MODE=${1:-"--app"}
 
 start_app() {
     info "Launching Streamlit Frontend (Port 8501)..."
+    info "Local URL:   ${BOLD}${GREEN}http://localhost:8501${RESET}"
+    info "Network URL: ${BOLD}${GREEN}http://${IP_ADDR}:8501${RESET}"
     streamlit run app.py --server.port 8501 --server.headless true
 }
 
 start_api() {
+    info "Launching Chatbot API (Port 8000)..."
+    info "Local URL:   ${BOLD}${GREEN}http://localhost:8000/docs${RESET}"
+    info "Network URL: ${BOLD}${GREEN}http://${IP_ADDR}:8000/docs${RESET}"
     cd UC04_Assistant && python3 -m uvicorn main_api:app --host 0.0.0.0 --port 8000
 }
 
 start_tester() {
+    info "Launching API Test UI (Port 8080)..."
+    info "Local URL:   ${BOLD}${GREEN}http://localhost:8080/api_test_ui.html${RESET}"
+    info "Network URL: ${BOLD}${GREEN}http://${IP_ADDR}:8080/api_test_ui.html${RESET}"
     python3 -m http.server 8080 --directory UC04_Assistant/api_tester
 }
 
 show_dashboard() {
     echo -e "${BOLD}${YELLOW}┌──────────────────────────────────────────────────────────┐${RESET}"
-    echo -e "${BOLD}${YELLOW}│${RESET}  ${BOLD}ACCESS URLS${RESET}                                            ${BOLD}${YELLOW}│${RESET}"
+    echo -e "${BOLD}${YELLOW}│${RESET}  ${BOLD}ACCESS URLS (Network: http://${IP_ADDR})${RESET}               ${BOLD}${YELLOW}│${RESET}"
     echo -e "${BOLD}${YELLOW}├──────────────────────────────────────────────────────────┤${RESET}"
-    echo -e "${BOLD}${YELLOW}│${RESET}  ${GREEN}Streamlit Frontend:${RESET}  http://localhost:8501            ${BOLD}${YELLOW}│${RESET}"
-    echo -e "${BOLD}${YELLOW}│${RESET}  ${GREEN}Chatbot API Docs:${RESET}    http://localhost:8000/docs       ${BOLD}${YELLOW}│${RESET}"
-    echo -e "${BOLD}${YELLOW}│${RESET}  ${GREEN}API Test UI:${RESET}         http://localhost:8080/api_test_ui.html ${BOLD}${YELLOW}│${RESET}"
+    echo -e "${BOLD}${YELLOW}│${RESET}  ${GREEN}Streamlit Frontend:${RESET}  http://${IP_ADDR}:8501            ${BOLD}${YELLOW}│${RESET}"
+    echo -e "${BOLD}${YELLOW}│${RESET}  ${GREEN}Chatbot API Docs:${RESET}    http://${IP_ADDR}:8000/docs       ${BOLD}${YELLOW}│${RESET}"
+    echo -e "${BOLD}${YELLOW}│${RESET}  ${GREEN}API Test UI:${RESET}         http://${IP_ADDR}:8080/api_test_ui.html ${BOLD}${YELLOW}│${RESET}"
     echo -e "${BOLD}${YELLOW}└──────────────────────────────────────────────────────────┘${RESET}"
     echo ""
 }
