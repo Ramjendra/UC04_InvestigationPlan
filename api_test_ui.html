@@ -252,23 +252,8 @@
             cursor: pointer;
         }
 
-        /* --- Badges --- */
-        .badge-tray {
-            display: flex;
-            gap: 6px;
-            margin-top: 10px;
-        }
-
-        .badge {
-            font-size: 9px;
-            background: #f3f2f1;
-            padding: 2px 8px;
-            border-radius: 10px;
-            color: var(--crm-gray);
-            border: 1px solid #edebe9;
-        }
-
         /* Notifications */
+
         .sync-toast {
             position: fixed;
             bottom: 20px;
@@ -371,14 +356,8 @@
 
             const sender = role === 'user' ? 'Direct Input' : 'BRI Assistant Agent';
 
-            let badges = '';
-            if (stages.length > 0) {
-                badges = '<div class="badge-tray">';
-                stages.forEach(s => badges += `<span class="badge">${s.icon} ${s.stage}</span>`);
-                badges += '</div>';
-            }
-
             let actions = '';
+
             if (role === 'assistant') {
                 actions = `
                 <div class="actions-tray">
@@ -392,9 +371,9 @@
             msgDiv.innerHTML = `
             <div class="sender">${sender}</div>
             <div class="content">${content}</div>
-            ${badges}
             ${actions}
         `;
+
 
             chatWindow.appendChild(msgDiv);
             chatWindow.scrollTop = chatWindow.scrollHeight;
