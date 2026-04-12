@@ -423,8 +423,17 @@
                 ✓ This record is now live in the Investigation Planning Tab.
             </div>
         `;
+            // Cross-Process Sync: Notify Streamlit via API
+            fetch('http://localhost:8000/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: content })
+            }).then(res => res.json()).then(data => {
+                console.log("Cross-process sync status:", data);
+            }).catch(err => console.error("Sync error:", err));
 
             // Mark message as accepted
+
             btn.innerHTML = '✓ Synced';
             btn.disabled = true;
             btn.nextElementSibling.style.display = 'none';

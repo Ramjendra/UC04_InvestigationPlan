@@ -207,6 +207,15 @@ if "assistant_messages" not in st.session_state: st.session_state.assistant_mess
     {"role": "assistant", "content": "How can I help you with your investigation plan today?"}
 ]
 
+# Sync fields for Investigation Plan
+if "bci_synopsis" not in st.session_state:
+    st.session_state.bci_synopsis = "This investigation concerns alleged harassment incidents occurring between Q3 and Q4 2025. Preliminary evidence from NAVEX intake suggests a pattern of behavior involving Target A and multiple witnesses in the EMEA region. All relevant email logs and Teams chat history have been indexed via VerseAPI for context retrieval."
+if "bci_exec" not in st.session_state:
+    st.session_state.bci_exec = "The investigation is currently in the Triage phase. High-priority witnesses have been identified. AI Copilot has drafted initial interview protocols and cross-referenced 2 precedent cases with similar fact patterns."
+if "last_sync_time" not in st.session_state:
+    st.session_state.last_sync_time = None
+
+
 
 # ── Triage Runner (sync wrapper) ───────────────────────────────────────────────
 
@@ -370,6 +379,23 @@ with main_col:
 
     with tabs[3]: # Investigation Plan
         st.markdown("### INVESTIGATION REPORT")
+        
+        # Cross-Process Sync Checker
+        sync_file = "sync_data.json"
+        if os.path.exists(sync_file):
+            try:
+                with open(sync_file, "r") as f:
+                    sync_data = json.load(f)
+                
+                # If timestamp is new, notify user
+                st.success(f"🤖 AI suggestion available (Synced at {sync_data.get('timestamp')})")
+                if st.button("Apply Sycned AI Suggestion"):
+                    st.session_state.bci_synopsis = sync_data.get("summary", "")
+                    st.session_state.last_sync_time = sync_data.get("timestamp")
+                    st.toast("Investigation Plan Updated!")
+            except:
+                pass
+
         st.markdown("""
 <div style="display:flex; justify-content:flex-end; gap:15px; font-size:11px; color:#605e5c; padding:8px 0; border-bottom:1px solid #edebe9;">
     <span>Refresh</span>
@@ -383,12 +409,11 @@ with main_col:
         
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("### BCI CASE SYNOPSIS")
-        mock_synopsis = "This investigation concerns alleged harassment incidents occurring between Q3 and Q4 2025. Preliminary evidence from NAVEX intake suggests a pattern of behavior involving Target A and multiple witnesses in the EMEA region. All relevant email logs and Teams chat history have been indexed via VerseAPI for context retrieval."
-        st.text_area("Synopsis Editor", mock_synopsis, height=120, label_visibility="collapsed", key="synopsis_area_mock")
+        st.text_area("Synopsis Editor", st.session_state.bci_synopsis, height=120, label_visibility="collapsed", key="synopsis_area_live")
         
         st.markdown("### BCI EXECUTIVE SUMMARY")
-        mock_exec = "The investigation is currently in the Triage phase. High-priority witnesses have been identified. AI Copilot has drafted initial interview protocols and cross-referenced 2 precedent cases with similar fact patterns."
-        st.text_area("Exec Summary", mock_exec, height=100, label_visibility="collapsed", key="exec_area_mock")
+        st.text_area("Exec Summary", st.session_state.bci_exec, height=100, label_visibility="collapsed", key="exec_area_live")
+
         
         if st.button("Run Copilot Investigation Planner", use_container_width=True):
             # ... pipeline logic remains same for real generation
